@@ -3,71 +3,117 @@ var router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
+const pool = require('../db');
+const authenticateToken = require('../middleware/authentication');
+const allowRoles = require('../middleware/authorization');
 
-const users = []; // Cambiar por la base de datos
 
 /* GET users listing. Presenta la lista de usuarios registrados*/
-router.get('/', function(req, res, next) {
-  res.send(users);
+router.get('/', authenticateToken, allowRoles('Admin'), function(req, res, next) {
+  //Consulta para retornar los usuarios del sistema
+  const sqlQuery = 'SELECT idusuario, nombre, email, tipo, activo, fecha_creacion FROM usuario';
+
+  //Usar el pool para los resultados
+  pool.query(sqlQuery,(err,results)=>{
+    if(err){
+      console.error('Error al leer los usuarios: ', err);
+      return res.status(500).send('Error de consulta');
+    }
+    res.json(results); //Enviar los resultados como JSON
+  });
 });
 
 // Ruta para registrar un usuario
 router.post('/register', async (req, res) => {
-  const { username, email, password, role } = req.body;
+  const { username, email, password } = req.body;
+
+  // Validación de los parámetros: asegurarse de que nombre, password y el email sean proporcionados
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: 'Debes proporcionar nombre, correo electrónico y una contraseña' });
+  }
 
   // Verifica si el usuario ya existe en la base de datos
-  const userExists = users.find(user => user.username === username);
-  if (userExists) {
-    return res.status(400).json({ message: 'El usuario ya existe' });
+  const resultadoVerificarUsuario = await verificarUsuario(username);  // Esperar la respuesta de la función
+  if(resultadoVerificarUsuario){
+    return res.status(404).json({ error: 'Este nombre de usuario ya existe en la base de datos' });
   }
 
   // Hashear la contraseña para guardar el hashed frase en la base de datos
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // Crear y almacenar el nuevo usuario
-  const newUser = { username, email, password: hashedPassword, role };
-  users.push(newUser);
+  //Consulta parametrizada para insertar nuevo usuario
+  const sqlQuery = 'INSERT INTO usuario (nombre, email, contrasena) VALUES (?,?,?)';
 
-  res.status(201).json({ message: 'Usuario registrado' });
+  //Usar el pool para los resultados
+  pool.query(sqlQuery,[username,email,hashedPassword],(err,results)=>{
+      if(err){
+          console.error('Error al agregar el usuario: ', err);
+          return res.status(500).send('Error al agregar el usuario');
+      }
+      res.status(201).json({
+          message:'Usuario agregado con éxito',
+          usuarioId: results.insertId
+      });
+  });
 });
+
+//Validacion que el nombre de usuario existe
+async function verificarUsuario(username) {
+  return new Promise((resolve, reject) => {
+      const sqlQueryVerificarUsuarios = 'SELECT idusuario, nombre,contrasena,tipo,activo FROM usuario WHERE nombre = ?';
+      pool.query(sqlQueryVerificarUsuarios,[username],(err,results)=>{
+          if(err){
+              console.error('Error al verificar al usuario: ', err);
+              return reject(err);
+          }
+          else {
+              if(results.length>0){
+                  usuario = results[0];
+                  resolve(true);
+              }
+              else{
+                  resolve(false);
+              }
+          }
+      });
+  });
+}
 
 // Ruta para iniciar sesión
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
-  // Buscar el usuario
-  const user = users.find(user => user.username === username);
-  if (!user) {
-    return res.status(400).json({ message: 'Usuario no encontrado' });
+  // Validación de los parámetros: asegurarse de que nombre y password sean proporcionados
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Debes proporcionar nombre y una contraseña' });
+  }
+  //Validacion que el usuario existe
+  try {
+    const resultadoVerificarUsuario = await verificarUsuario(username);  // Esperar la respuesta de la función
+    if(!resultadoVerificarUsuario){
+        return res.status(404).json({ error: 'Este usuario no existe' });
+    }
+    
+  } catch (error) {
+    return res.status(500).send(error.message);  // Manejo de errores
   }
 
   // Verificar la contraseña
-  const validPassword = await bcrypt.compare(password, user.password);
+  const validPassword = await bcrypt.compare(password, usuario.contrasena);
   if (!validPassword) {
     return res.status(401).json({ message: 'Contraseña incorrecta' });
   }
 
-  // Crear el token JWT
-  const token = jwt.sign({ username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  // Verificar si está activo
+  if (usuario.activo != 'Si') {
+    return res.status(401).json({ message: 'Usuario está inactivo' });
+  }
 
+  // Crear el token JWT
+  const token = jwt.sign({ id:usuario.idusuario, username: usuario.nombre, tipo:usuario.tipo }, process.env.JWT_SECRET, { expiresIn: '1h' });
   res.json({ token });
 });
 
-// Para verificar el token
-const authenticateToken = (req, res, next) => {
-  const token = req.header('Authorization')?.split(' ')[1];
-  if (!token) {
-    return res.status(403).json({ message: 'Acceso denegado' });
-  }
-
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.status(403).json({ message: 'Token no válido' });
-    }
-    req.user = user;
-    next();
-  });
-};
 
 // Ruta protegida (requiere autenticación)
 router.get('/profile', authenticateToken, (req, res) => {

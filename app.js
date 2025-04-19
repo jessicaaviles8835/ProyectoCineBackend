@@ -7,6 +7,9 @@ const cors = require('cors');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var salasRouter = require('./routes/salas');
+var peliculasRouter = require('./routes/peliculas');
+var carteleraRouter = require('./routes/cartelera');
 
 var app = express();
 
@@ -20,9 +23,14 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cors());
+app.use('/posters', express.static('posters'));
 
+//Rutas
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/salas', salasRouter);
+app.use('/peliculas', peliculasRouter);
+app.use('/cartelera', carteleraRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
