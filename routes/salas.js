@@ -19,6 +19,29 @@ router.get('/', authenticateToken, allowRoles('Admin'), function(req, res, next)
     });
   });
 
+//Ruta para obtener sala por id
+router.get('/ver/:id', authenticateToken, allowRoles('Admin'), (req,res) => {
+  //Obtener los parámetros desde la llamada
+  const id = parseInt(req.params.id);
+
+  // Validación de los parámetros: asegurarse de que id sea proporcionado
+  if (!id) {
+      return res.status(404).json({ error: 'Debes proporcionar el id' });
+  }
+
+  //Consulta parametrizada para buscar por id y nombre
+  const sqlQuery = 'SELECT * FROM sala WHERE idsala = ?';
+
+  //Usar el pool para los resultados
+  pool.query(sqlQuery,[id],(err,results)=>{
+      if(err){
+          console.error('Error al leer los datos de la sala: ', err);
+          return res.status(500).send('Error de consulta');
+      }
+      res.json(results[0]); //Enviar los resultados como JSON
+  });
+});
+
 
 // Ruta para registrar una sala
 router.post('/new', authenticateToken, allowRoles('Admin'), async (req, res) => {

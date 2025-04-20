@@ -11,7 +11,7 @@ const allowRoles = require('../middleware/authorization');
 /* GET users listing. Presenta la lista de usuarios registrados*/
 router.get('/', authenticateToken, allowRoles('Admin'), function(req, res, next) {
   //Consulta para retornar los usuarios del sistema
-  const sqlQuery = 'SELECT idusuario, nombre, email, tipo, activo, fecha_creacion FROM usuario';
+  const sqlQuery = 'SELECT idusuario as id, nombre, email, tipo, activo, fecha_creacion FROM usuario';
 
   //Usar el pool para los resultados
   pool.query(sqlQuery,(err,results)=>{
@@ -91,7 +91,7 @@ router.post('/login', async (req, res) => {
   try {
     const resultadoVerificarUsuario = await verificarUsuario(username);  // Esperar la respuesta de la función
     if(!resultadoVerificarUsuario){
-        return res.status(404).json({ error: 'Este usuario no existe' });
+        return res.status(401).json({ error: 'Este usuario no existe' });
     }
     
   } catch (error) {
