@@ -11,7 +11,8 @@ router.get('/', function(req, res, next) {
                         p.descripcion AS descripcionPelicula, s.nombre as nombreSala FROM cartelera c
                         INNER JOIN pelicula p ON c.idpelicula=p.idpelicula
                         INNER JOIN sala s ON c.idsala=s.idsala
-                        WHERE c.activa = "Si"`;
+                        WHERE c.activa = "Si"
+                        AND c.fecha >= DATE(NOW())`;
   
     //Usar el pool para los resultados
     pool.query(sqlQuery,(err,results)=>{
