@@ -57,6 +57,41 @@ router.post('/register', async (req, res) => {
   });
 });
 
+
+// Ruta para registrar un nuevo usuario
+router.post('/new', authenticateToken, allowRoles('Admin'),async (req, res) => {
+  const { username, email, password, tipo, activo } = req.body;
+
+  // Validación de los parámetros: asegurarse de que nombre, password, tipo, activo y el email sean proporcionados
+  if (!username || !email || !password || !tipo || !activo) {
+    return res.status(400).json({ error: 'Debes proporcionar nombre, correo electrónico, tipo de usuario, activo y una contraseña' });
+  }
+
+  // Verifica si el usuario ya existe en la base de datos
+  const resultadoVerificarUsuario = await verificarUsuario(username);  // Esperar la respuesta de la función
+  if(resultadoVerificarUsuario){
+    return res.status(404).json({ error: 'Este nombre de usuario ya existe en la base de datos' });
+  }
+
+  // Hashear la contraseña para guardar el hashed frase en la base de datos
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  //Consulta parametrizada para insertar nuevo usuario
+  const sqlQuery = 'INSERT INTO usuario (nombre, email, contrasena, tipo, activo) VALUES (?,?,?,?,?)';
+
+  //Usar el pool para los resultados
+  pool.query(sqlQuery,[username,email,hashedPassword,tipo,activo],(err,results)=>{
+      if(err){
+          console.error('Error al agregar el usuario: ', err);
+          return res.status(500).send('Error al agregar el usuario');
+      }
+      res.status(201).json({
+          message:'Usuario agregado con éxito',
+          usuarioId: results.insertId
+      });
+  });
+});
+
 //Validacion que el nombre de usuario existe
 async function verificarUsuario(username) {
   return new Promise((resolve, reject) => {
