@@ -7,12 +7,11 @@ const allowRoles = require('../middleware/authorization');
 /* GET lista de peliculas en cartelera. Presenta la lista de las peliculas que están exhibiendose*/
 router.get('/', function(req, res, next) {
     //Consulta para retornar las salas del sistema
-    const sqlQuery = `SELECT c.idcartelera AS id, c.fecha AS fecha, p.nombre AS nombrePelicula, p.poster, 
-                        p.descripcion AS descripcionPelicula, s.nombre as nombreSala FROM cartelera c
-                        INNER JOIN pelicula p ON c.idpelicula=p.idpelicula
-                        INNER JOIN sala s ON c.idsala=s.idsala
-                        WHERE c.activa = "Si"
-                        AND c.fecha >= DATE(NOW())`;
+    const sqlQuery = `SELECT DISTINCT p.idpelicula AS id, p.nombre AS nombrePelicula, p.poster, p.descripcion AS descripcionPelicula FROM cartelera c
+                      INNER JOIN pelicula p ON c.idpelicula=p.idpelicula
+                      INNER JOIN sala s ON c.idsala=s.idsala
+                      WHERE c.activa = "Si"
+                      AND c.fecha >= DATE(NOW())`;
   
     //Usar el pool para los resultados
     pool.query(sqlQuery,(err,results)=>{
