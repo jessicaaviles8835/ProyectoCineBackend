@@ -20,7 +20,7 @@ router.get('/', authenticateToken, allowRoles('Admin'), function(req, res, next)
   });
 
 //Ruta para obtener sala por id
-router.get('/ver/:id', authenticateToken, allowRoles('Admin'), (req,res) => {
+router.get('/:id', authenticateToken, allowRoles('Admin'), (req,res) => {
   //Obtener los parámetros desde la llamada
   const id = parseInt(req.params.id);
 
@@ -78,7 +78,7 @@ router.post('/new', authenticateToken, allowRoles('Admin'), async (req, res) => 
 });
 
 
-// Ruta para registrar una sala
+// Ruta para editar una sala
 router.put('/edit', authenticateToken, allowRoles('Admin'), async (req, res) => {
   const { id, nombre, filas, columnas, activa } = req.body;
   
@@ -90,7 +90,7 @@ router.put('/edit', authenticateToken, allowRoles('Admin'), async (req, res) => 
   //Calcular la capacidad de la sala
   const capacidad = filas * columnas;
 
-  //Consulta parametrizada para insertar nueva sala
+  //Consulta parametrizada para editar sala
   const sqlQuery = `
     UPDATE sala
     SET nombre = ?, filas = ?, columnas = ?, capacidad = ?, activa = ?

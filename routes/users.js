@@ -23,6 +23,30 @@ router.get('/', authenticateToken, allowRoles('Admin'), function(req, res, next)
   });
 });
 
+//Ruta para obtener sala por id
+router.get('/:id', authenticateToken, allowRoles('Admin'), (req,res) => {
+  //Obtener los parámetros desde la llamada
+  const id = parseInt(req.params.id);
+
+  // Validación de los parámetros: asegurarse de que id sea proporcionado
+  if (!id) {
+      return res.status(404).json({ error: 'Debes proporcionar el id' });
+  }
+
+  //Consulta parametrizada para buscar por id y nombre
+  const sqlQuery = 'SELECT * FROM usuario WHERE idusuario = ?';
+
+  //Usar el pool para los resultados
+  pool.query(sqlQuery,[id],(err,results)=>{
+      if(err){
+          console.error('Error al leer los datos del usuario: ', err);
+          return res.status(500).send('Error de consulta');
+      }
+      res.json(results[0]); //Enviar los resultados como JSON
+  });
+});
+
+
 // Ruta para registrar un usuario
 router.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
@@ -88,6 +112,40 @@ router.post('/new', authenticateToken, allowRoles('Admin'),async (req, res) => {
       res.status(201).json({
           message:'Usuario agregado con éxito',
           usuarioId: results.insertId
+      });
+  });
+});
+
+
+// Ruta para editar un usuario
+router.put('/edit', authenticateToken, allowRoles('Admin'),async (req, res) => {
+  const { id, username, email, tipo, activo } = req.body;
+
+  // Validación de los parámetros: asegurarse de que nombre, password, tipo, activo y el email sean proporcionados
+  if (!id || !username || !email || !tipo || !activo) {
+    return res.status(400).json({ error: 'Debes proporcionar id, nombre, correo electrónico, tipo de usuario, activo ' });
+  }
+
+  //Consulta parametrizada para editar usuario
+
+  const sqlQuery = `
+    UPDATE usuario
+    SET nombre = ?, email = ?, tipo = ?, activo = ?
+    WHERE idusuario = ?
+  `;
+
+  //Usar el pool para los resultados
+  pool.query(sqlQuery,[username,email,tipo,activo,id],(err,results)=>{
+      if(err){
+          console.error('Error al editar el usuario: ', err);
+          return res.status(500).send('Error al editar el usuario');
+      }
+      if(results.affectedRows==0){
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+      res.json({
+          message:'Usuario actualizado con éxito',
+          salaId: id
       });
   });
 });
