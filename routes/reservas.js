@@ -55,11 +55,11 @@ router.get('/step2/:id/:fecha', authenticateToken, allowRoles('Admin', 'Cliente'
     //Obtener los parámetros desde la llamada
     const id = parseInt(req.params.id);
     //Consulta para retornar las butacas
-    const sqlQuery = `SELECT r.idreserva as id, r.butaca, r.estado,
-                        p.nombre AS nombrePelicula, p.poster, p.descripcion AS descripcionPelicula, c.fecha, s.idsala AS sala, 
-                        s.nombre AS nombreSala
-                        FROM reserva r
-                        INNER JOIN cartelera c ON c.idcartelera=r.idcartelera
+    const sqlQuery = `SELECT r.idreserva as id, r.butaca as numAsiento, r.estado, p.idpelicula AS pelicula,
+                        p.nombre AS nombrePelicula, p.poster, p.descripcion AS descripcionPelicula, c.idcartelera AS cartelera, c.fecha, s.idsala AS sala,
+                        s.nombre AS nombreSala, s.capacidad as capacidad, s.filas as filas, s.columnas as columnas
+                        FROM cartelera c
+                        LEFT JOIN reserva r ON c.idcartelera=r.idcartelera
                         INNER JOIN sala s ON c.idsala=s.idsala
                         INNER JOIN pelicula p ON c.idpelicula=p.idpelicula
                         where c.idcartelera = ?
