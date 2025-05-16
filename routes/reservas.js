@@ -32,12 +32,12 @@ router.get('/step2/:id/:fecha', authenticateToken, allowRoles('Admin', 'Cliente'
     const id = parseInt(req.params.id);
     const fecha = req.params.fecha;
     //Consulta para retornar las fechas disponibles de la pelicula
-    const sqlQuery = `SELECT DISTINCT c.idcartelera AS id, p.nombre AS nombrePelicula, p.poster, p.descripcion AS descripcionPelicula, c.fecha, s.idsala AS sala, s.nombre AS nombreSala
+    const sqlQuery = `SELECT DISTINCT c.idcartelera AS idcartelera, p.nombre AS nombrePelicula, p.poster, p.descripcion AS descripcionPelicula, c.fecha, s.idsala AS sala, s.nombre AS nombreSala
                         FROM cartelera c
                         INNER JOIN pelicula p ON c.idpelicula=p.idpelicula
                         INNER JOIN sala s ON c.idsala=s.idsala
                         WHERE c.activa = "Si" AND c.fecha = ?  AND p.idpelicula = ?
-                        ORDER BY c.fecha`;
+                        ORDER BY s.nombre`;
   
     //Usar el pool para los resultados
     pool.query(sqlQuery,[fecha,id],(err,results)=>{
@@ -51,9 +51,9 @@ router.get('/step2/:id/:fecha', authenticateToken, allowRoles('Admin', 'Cliente'
 
 
   /* GET lista de las butacas de la cartelera*/
-  router.get('/step3/:id', authenticateToken, allowRoles('Admin', 'Cliente'), function(req, res, next) {
+  router.get('/step3/:idcartelera', authenticateToken, allowRoles('Admin', 'Cliente'), function(req, res, next) {
     //Obtener los parámetros desde la llamada
-    const id = parseInt(req.params.id);
+    const idcartelera = parseInt(req.params.idcartelera);
     //Consulta para retornar las butacas
     const sqlQuery = `SELECT r.idreserva as id, r.butaca as numAsiento, r.estado, p.idpelicula AS pelicula,
                         p.nombre AS nombrePelicula, p.poster, p.descripcion AS descripcionPelicula, c.idcartelera AS cartelera, c.fecha, s.idsala AS sala,
@@ -66,7 +66,7 @@ router.get('/step2/:id/:fecha', authenticateToken, allowRoles('Admin', 'Cliente'
                         ORDER BY r.butaca`;
   
     //Usar el pool para los resultados
-    pool.query(sqlQuery,[id],(err,results)=>{
+    pool.query(sqlQuery,[idcartelera],(err,results)=>{
       if(err){
         console.error('Error al leer los datos: ', err);
         return res.status(500).send('Error de consulta');

@@ -24,23 +24,58 @@ router.get('/', function(req, res, next) {
   });
 
 
+/* GET lista de peliculas en cartelera. Presenta la lista de las peliculas que están en la bc*/
+router.get('/cartelera', authenticateToken, allowRoles('Admin'), function(req, res, next) {
+    //Consulta para retornar las salas del sistema
+    const sqlQuery = `SELECT DISTINCT c.idcartelera AS id, p.nombre AS pelicula, c.fecha as fechaFuncion, s.nombre as sala, c.activa FROM cartelera c
+                      INNER JOIN pelicula p ON c.idpelicula=p.idpelicula
+                      INNER JOIN sala s ON c.idsala=s.idsala`;
+  
+    //Usar el pool para los resultados
+    pool.query(sqlQuery,(err,results)=>{
+      if(err){
+        console.error('Error al leer la cartelera: ', err);
+        return res.status(500).send('Error de consulta');
+      }
+      res.json(results); //Enviar los resultados como JSON
+    });
+  }); 
+
+
+function getFechasEntre(inicio, fin) {
+  const fechas = [];
+  let actual = new Date(inicio);
+  const finDate = new Date(fin);
+
+  while (actual <= finDate) {
+    fechas.push(actual.toISOString().slice(0, 10)); // YYYY-MM-DD
+    actual.setDate(actual.getDate() + 1);
+  }
+
+  return fechas;
+}
+
 // Ruta para registrar una entrada en la cartelera
 router.post('/new', authenticateToken, allowRoles('Admin'), async (req, res) => {
-  const { idSala, idPelicula, fecha } = req.body;
+  const { sala, pelicula, fechaI, fechaF } = req.body;
   const idUsuario = req.user.id;
   
 
-  // Validación de los parámetros: asegurarse de que la sala, la película y la fecha sean proporcionados
-  if (!idSala || !idPelicula || !fecha) {
+  // Validación de los parámetros: asegurarse de que la sala, la película y las fechas sean proporcionados
+  if (!sala || !pelicula || !fechaI || !fechaF) {
     return res.status(400).json({ error: 'Debes proporcionar la sala, la película y la fecha' });
   }
 
+  const fechas = getFechasEntre(fechaI, fechaF);
+
+  const valores = fechas.map(fecha => [sala, pelicula, fecha, idUsuario]);
+
 
   //Consulta parametrizada para insertar nueva entrada de la cartelera
-  const sqlQuery = 'INSERT INTO cartelera (idsala, idpelicula, fecha, usuariocreacion) VALUES (?,?,?,?)';
+  const sqlQuery = 'INSERT IGNORE INTO cartelera (idsala, idpelicula, fecha, usuariocreacion) VALUES ?';
 
   //Usar el pool para los resultados
-  pool.query(sqlQuery,[idSala,idPelicula,fecha,idUsuario],(err,results)=>{
+  pool.query(sqlQuery,[valores],(err,results)=>{
       if(err){
           console.error('Error al agregar la pelicula en la cartelera: ', err);
           if(err.code=='ER_DUP_ENTRY'){

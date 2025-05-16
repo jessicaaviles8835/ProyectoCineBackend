@@ -119,4 +119,19 @@ router.put('/edit', authenticateToken, allowRoles('Admin'), async (req, res) => 
   });
 });
 
+/* GET lista de salas. Presenta la lista de salas activas*/
+router.get('/api/activas', authenticateToken, allowRoles('Admin'), function(req, res, next) {
+    //Consulta para retornar las peliculas del sistema
+    const sqlQuery = 'SELECT idsala, nombre FROM sala where activa="Si"';
+  
+    //Usar el pool para los resultados
+    pool.query(sqlQuery,(err,results)=>{
+      if(err){
+        console.error('Error al leer las salas: ', err);
+        return res.status(500).send('Error de consulta');
+      }
+      res.json(results); //Enviar los resultados como JSON
+    });
+  });
+
 module.exports = router;
