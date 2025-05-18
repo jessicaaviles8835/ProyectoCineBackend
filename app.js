@@ -11,6 +11,7 @@ var salasRouter = require('./routes/salas');
 var peliculasRouter = require('./routes/peliculas');
 var carteleraRouter = require('./routes/cartelera');
 var reservasRouter = require('./routes/reservas');
+const iniciarLiberadorReservas = require('./liberador');
 
 var app = express();
 
@@ -33,6 +34,9 @@ app.use('/salas', salasRouter);
 app.use('/peliculas', peliculasRouter);
 app.use('/cartelera', carteleraRouter);
 app.use('/reservas', reservasRouter);
+
+// Iniciar liberador
+iniciarLiberadorReservas();
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
