@@ -23,7 +23,7 @@ router.get('/', authenticateToken, allowRoles('Admin'), function(req, res, next)
   });
 });
 
-//Ruta para obtener sala por id
+//Ruta para obtener usuario por id
 router.get('/:id', authenticateToken, allowRoles('Admin'), (req,res) => {
   //Obtener los parámetros desde la llamada
   const id = parseInt(req.params.id);
@@ -143,9 +143,9 @@ router.put('/edit', authenticateToken, allowRoles('Admin'),async (req, res) => {
       if(results.affectedRows==0){
         return res.status(404).json({ error: 'Usuario no encontrado' });
       }
-      res.json({
+      res.status(200).json({
           message:'Usuario actualizado con éxito',
-          salaId: id
+          usuarioId: id
       });
   });
 });
@@ -209,8 +209,8 @@ router.post('/login', async (req, res) => {
 
 
 // Ruta protegida (requiere autenticación)
-router.get('/profile', authenticateToken, (req, res) => {
-  res.json({ message: `Bienvenido ${req.user.username}` });
+router.get('/profile/view', authenticateToken, (req, res) => {
+  res.status(200).json({ message: `Bienvenido ${req.user.username}` });
 });
 
 module.exports = router;

@@ -5,7 +5,7 @@ require('dotenv').config();
 const authenticateToken = (req, res, next) => {
     const token = req.header('Authorization')?.split(' ')[1];
     if (!token) {
-      return res.status(403).json({ message: 'Acceso denegado, no tiene permisos' });
+      return res.status(401).json({ message: 'Acceso denegado, debe ingresar' });
     }
   
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {

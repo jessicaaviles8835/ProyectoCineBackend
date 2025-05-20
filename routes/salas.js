@@ -112,7 +112,7 @@ router.put('/edit', authenticateToken, allowRoles('Admin'), async (req, res) => 
       if(results.affectedRows==0){
         return res.status(404).json({ error: 'Sala no encontrada' });
       }
-      res.json({
+      res.status(200).json({
           message:'Sala actualizada con éxito',
           salaId: id
       });

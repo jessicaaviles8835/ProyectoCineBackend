@@ -75,7 +75,7 @@ router.post('/new', authenticateToken, allowRoles('Admin'), upload.single('file'
       }
       res.status(201).json({
           message:'Película agregada con éxito',
-          salaId: results.insertId
+          peliculaId: results.insertId
       });
   });
 });
@@ -116,7 +116,7 @@ router.put('/edit', authenticateToken, allowRoles('Admin'), upload.single('file'
       if(results.affectedRows==0){
         return res.status(404).json({ error: 'Película no encontrada' });
       }
-      res.json({
+      res.status(200).json({
           message:'Película actualizada con éxito',
           peliculaId: idpelicula
       });

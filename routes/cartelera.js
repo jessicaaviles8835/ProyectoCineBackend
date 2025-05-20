@@ -125,7 +125,7 @@ router.put('/edit', authenticateToken, allowRoles('Admin'), async (req, res) => 
       if(results.affectedRows==0){
         return res.status(404).json({ error: 'Película no encontrada en la cartelera' });
       }
-      res.json({
+      res.status(200).json({
           message:'Cartelera actualizada con éxito',
           carteleraId: id
       });
