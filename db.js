@@ -1,23 +1,23 @@
 const mysql = require('mysql2');
-const parametros = require('./config');
+const { DB_HOST, DB_USER, DB_PORT,DB_PASSWORD,DB_NAME,DB_NAME_TEST } = require('./config');
 
 const config = {
   development: {
-    host: parametros.DB_HOST,
-    port:parametros.DB_PORT,
-    user: parametros.DB_USER,
-    password: parametros.DB_PASSWORD,
-    database: parametros.DB_NAME, // base real
+    host: DB_HOST,
+    port:DB_PORT,
+    user: DB_USER,
+    password: DB_PASSWORD,
+    database: DB_NAME, // base real
     waitForConnections:true, //Espera si todas las conexiones están en uso
     connectionLimit: 100, //Número máximo de conexiones simultáneas
     queueLimit:0 //Número de consultas en espera (0 significa sin límite)
   },
   test: {
-    host: parametros.DB_HOST,
-    port:parametros.DB_PORT,
-    user: parametros.DB_USER,
-    password: parametros.DB_PASSWORD,
-    database: parametros.DB_NAME_TEST, // base pruebas
+    host: DB_HOST,
+    port:DB_PORT,
+    user: DB_USER,
+    password: DB_PASSWORD,
+    database: DB_NAME_TEST, // base pruebas
     waitForConnections:true, //Espera si todas las conexiones están en uso
     connectionLimit: 100, //Número máximo de conexiones simultáneas
     queueLimit:0 //Número de consultas en espera (0 significa sin límite)
